@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# Descarga uv e instala dependencias
+# Instala uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-make install
+
+# Instala dependencias del proyecto usando Poetry
+poetry install --no-root
+
+# Sincroniza uv
+uv sync
