@@ -1,15 +1,21 @@
-[tool.poetry]
+[project]
 name = "hexlet-code"
 version = "0.1.0"
 description = "Analizador de páginas"
-authors = ["Jacobo Jaramillo Uribe <jacobo.jaramillo@hotmail.com>"]
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "flask",
+    "gunicorn",
+    "psycopg2-binary>=2.9.12",
+    "python-dotenv",
+    "requests>=2.34.2",
+    "validators>=0.35.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.12"
-flask = "^2.3"
-python-dotenv = "^1.0"
-gunicorn = "^21.0"
+[tool.setuptools]
+packages = ["page_analyzer"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
