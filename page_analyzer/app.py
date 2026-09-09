@@ -3,6 +3,8 @@ from page_analyzer.db import get_connection
 import validators
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "dev"
@@ -15,45 +17,51 @@ def index():
 
 @app.post("/urls")
 def create_url():
-    url = request.form.get("url", "").strip()
+    raw_url = request.form.get("url", "").strip()
 
-    if not url:
+    if not raw_url:
         flash("URL inválida", "danger")
         return redirect(url_for("index"))
 
-    if len(url) > 255:
+    if len(raw_url) > 255:
         flash("URL demasiado larga (máx 255 caracteres)", "danger")
         return redirect(url_for("index"))
 
-    if not validators.url(url):
+    if not validators.url(raw_url):
         flash("URL inválida", "danger")
         return redirect(url_for("index"))
+
+    # Normalizar URL (extraer solo esquema + dominio)
+    parsed = urlparse(raw_url)
+    normalized = f"{parsed.scheme}://{parsed.netloc}"
 
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT id FROM urls WHERE name = %s", (url,))
+        # Verificar si ya existe (usando la URL normalizada)
+        cur.execute("SELECT id FROM urls WHERE name = %s", (normalized,))
         existing = cur.fetchone()
 
         if existing:
-            flash("URL ya existe", "warning")
+            flash("La página ya existe", "danger")
             return redirect(url_for("show_url", id=existing[0]))
 
+        # Guardar URL normalizada
         cur.execute(
-            "INSERT INTO urls (name) VALUES (%s) RETURNING id",
-            (url,)
+            "INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id",
+            (normalized, datetime.now())
         )
-
         url_id = cur.fetchone()[0]
         conn.commit()
 
-        flash("URL añadida correctamente", "success")
+        flash("Página agregada con éxito", "success")
         return redirect(url_for("show_url", id=url_id))
 
     finally:
         cur.close()
         conn.close()
+
 
 @app.get("/urls")
 def list_urls():
@@ -70,9 +78,8 @@ def list_urls():
             FROM urls u
             LEFT JOIN url_checks c ON u.id = c.url_id
             GROUP BY u.id, u.name, u.created_at
-            ORDER BY u.created_at DESC
+            ORDER BY u.id DESC
         """)
-
         urls = cur.fetchall()
         return render_template("urls.html", urls=urls)
 
@@ -99,7 +106,6 @@ def show_url(id):
             WHERE url_id = %s
             ORDER BY id DESC
         """, (id,))
-
         checks = cur.fetchall()
 
         return render_template("url.html", url=url, checks=checks)
@@ -116,40 +122,44 @@ def create_check(id):
 
     try:
         cur.execute("SELECT name FROM urls WHERE id = %s", (id,))
-        url = cur.fetchone()[0]
+        url = cur.fetchone()
 
-        if not url.startswith("http"):
-            url = "https://" + url
-        headers = {
-        "User-Agent": "Mozilla/5.0"
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        status_code = response.status_code
+        if not url:
+            flash("URL no encontrada", "danger")
+            return redirect(url_for("list_urls"))
 
-        soup = BeautifulSoup(response.text, "html.parser")
+        url_name = url[0]
 
-        h1_tag = soup.find("h1")
-        h1 = h1_tag.get_text(strip=True) if h1_tag else ""
+        # Hacer solicitud HTTP
+        try:
+            response = requests.get(url_name, timeout=10)
+            response.raise_for_status()
+            status_code = response.status_code
 
-        title_tag = soup.find("title")
-        title = title_tag.get_text(strip=True) if title_tag else ""
+            soup = BeautifulSoup(response.text, "html.parser")
 
-        meta = soup.find("meta", attrs={"name": "description"})
-        description = meta["content"] if meta else ""
+            h1_tag = soup.find("h1")
+            h1 = h1_tag.get_text(strip=True) if h1_tag else ""
 
-        cur.execute("""
-            INSERT INTO url_checks
-            (url_id, status_code, h1, title, description, created_at)
-            VALUES (%s, %s, %s, %s, %s, NOW())
-        """, (id, status_code, h1, title, description))
+            title_tag = soup.find("title")
+            title = title_tag.get_text(strip=True) if title_tag else ""
 
-        conn.commit()
+            meta = soup.find("meta", attrs={"name": "description"})
+            description = meta.get("content", "").strip() if meta else ""
 
-        flash("Página analizada correctamente", "success")
+            # Guardar verificación
+            cur.execute("""
+                INSERT INTO url_checks
+                (url_id, status_code, h1, title, description, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (id, status_code, h1, title, description, datetime.now()))
+            conn.commit()
 
-    except requests.RequestException:
-        conn.rollback()
-        flash("Ocurrió un error al hacer la verificación", "danger")
+            flash("Página verificada con éxito", "success")
+
+        except requests.RequestException:
+            conn.rollback()
+            flash("Ocurrió un error al hacer la verificación", "danger")
 
     finally:
         cur.close()

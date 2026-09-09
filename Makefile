@@ -1,5 +1,5 @@
 install:
-	uv pip install -r pyproject.toml
+	uv sync
 
 dev:
 	uv run flask --debug --app page_analyzer:app run
