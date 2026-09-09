@@ -7,6 +7,14 @@
   </head>
 
   <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          Analizador de páginas
+        </a>
+      </div>
+    </nav>
+
     <div class="container mt-5">
 
       <h1 class="text-center">Analizador de páginas</h1>
@@ -23,9 +31,15 @@
 
       <form action="{{ url_for('create_url') }}" method="post" class="mt-4">
         <div class="mb-3">
-          <input type="text" name="url" class="form-control" placeholder="Ingresa una URL">
+          <input
+            type="text"
+            name="url"
+            class="form-control"
+            placeholder="Ingresa una URL"
+          >
         </div>
-        <button class="btn btn-primary">Enviar</button>
+
+        <button class="btn btn-primary">Verificar</button>
       </form>
 
     </div>
