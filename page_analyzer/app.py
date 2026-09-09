@@ -74,10 +74,13 @@ def list_urls():
                 u.id,
                 u.name,
                 u.created_at,
-                MAX(c.created_at) AS last_check
+                c.status_code AS last_status_code
             FROM urls u
-            LEFT JOIN url_checks c ON u.id = c.url_id
-            GROUP BY u.id, u.name, u.created_at
+            LEFT JOIN (
+                SELECT DISTINCT ON (url_id) url_id, status_code, created_at
+                FROM url_checks
+                ORDER BY url_id, created_at DESC
+            ) c ON u.id = c.url_id
             ORDER BY u.id DESC
         """)
         urls = cur.fetchall()
