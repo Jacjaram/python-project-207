@@ -155,7 +155,7 @@ def create_check(id):
             """, (id, status_code, h1, title, description, datetime.now()))
             conn.commit()
 
-            flash("La página se verificó correctamente", "success")
+            flash("La página fue verificada correctamente", "success")
 
         except requests.RequestException:
             conn.rollback()
