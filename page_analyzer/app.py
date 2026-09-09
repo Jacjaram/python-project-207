@@ -55,7 +55,7 @@ def create_url():
         url_id = cur.fetchone()[0]
         conn.commit()
 
-        flash("Página agregada con éxito", "success")
+        flash("La página se agregó correctamente", "success")
         return redirect(url_for("show_url", id=url_id))
 
     finally:
@@ -155,11 +155,11 @@ def create_check(id):
             """, (id, status_code, h1, title, description, datetime.now()))
             conn.commit()
 
-            flash("Página verificada con éxito", "success")
+            flash("La página se verificó correctamente", "success")
 
         except requests.RequestException:
             conn.rollback()
-            flash("Ocurrió un error al hacer la verificación", "danger")
+            flash("Error al verificar la página", "danger")
 
     finally:
         cur.close()
