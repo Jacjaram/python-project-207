@@ -34,15 +34,15 @@ def create_url():
     raw_url = request.form.get("url", "").strip()
 
     if not raw_url:
-        flash("URL inválida", "danger")
+        flash("URL no válido", "danger")
         return render_template("index.html"), 422
 
     if len(raw_url) > 255:
-        flash("URL demasiado larga (máx 255 caracteres)", "danger")
+        flash("URL no válido", "danger")
         return render_template("index.html"), 422
 
     if not validators.url(raw_url):
-        flash("URL inválida", "danger")
+        flash("URL no válido", "danger")
         return render_template("index.html"), 422
 
     # Normalizar URL (extraer solo esquema + dominio)
