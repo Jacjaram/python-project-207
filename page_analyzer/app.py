@@ -9,6 +9,20 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "dev"
 
+# Límites para truncar campos
+MAX_H1_LENGTH = 100
+MAX_TITLE_LENGTH = 200
+MAX_DESCRIPTION_LENGTH = 200
+
+
+def truncate(text, max_length):
+    """Trunca un texto y agrega '...' si excede el límite."""
+    if not text:
+        return ""
+    if len(text) <= max_length:
+        return text
+    return text[:max_length] + "..."
+
 
 @app.get("/")
 def index():
@@ -149,6 +163,11 @@ def create_check(id):
 
             meta = soup.find("meta", attrs={"name": "description"})
             description = meta.get("content", "").strip() if meta else ""
+
+            # Truncar campos largos
+            h1 = truncate(h1, MAX_H1_LENGTH)
+            title = truncate(title, MAX_TITLE_LENGTH)
+            description = truncate(description, MAX_DESCRIPTION_LENGTH)
 
             # Guardar verificación
             cur.execute("""
