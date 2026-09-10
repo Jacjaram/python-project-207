@@ -181,7 +181,7 @@ def create_check(id):
 
         except requests.RequestException:
             conn.rollback()
-            flash("Error al verificar la página", "danger")
+            flash("Ocurrió un error durante la verificación", "danger")
 
     finally:
         cur.close()
