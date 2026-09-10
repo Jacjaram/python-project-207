@@ -35,15 +35,15 @@ def create_url():
 
     if not raw_url:
         flash("URL inválida", "danger")
-        return redirect(url_for("index"))
+        return render_template("index.html"), 422
 
     if len(raw_url) > 255:
         flash("URL demasiado larga (máx 255 caracteres)", "danger")
-        return redirect(url_for("index"))
+        return render_template("index.html"), 422
 
     if not validators.url(raw_url):
         flash("URL inválida", "danger")
-        return redirect(url_for("index"))
+        return render_template("index.html"), 422
 
     # Normalizar URL (extraer solo esquema + dominio)
     parsed = urlparse(raw_url)
