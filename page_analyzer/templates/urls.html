@@ -34,6 +34,7 @@
           <tr>
             <th>ID</th>
             <th>Nombre</th>
+            <th>Creado</th>
             <th>Última revisión</th>
           </tr>
         </thead>
@@ -47,6 +48,7 @@
                 {{ url[1] }}
               </a>
             </td>
+            <td>{{ url[2].strftime('%Y-%m-%d') if url[2] else '-' }}</td>
             <td>
               {% if url[3] %}
                 {{ url[3] }}
