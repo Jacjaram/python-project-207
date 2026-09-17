@@ -16,9 +16,7 @@ def get_connection():
             "de entorno de Render (producción)."
         )
 
-    # Render requiere SSL. Si la URL no incluye sslmode, lo forzamos.
-    # En local (localhost) normalmente NO se usa SSL.
-    if 'sslmode' not in database_url and 'localhost' not in database_url:
+    if 'sslmode' not in database_url and 'render.com' in database_url:
         separator = '&' if '?' in database_url else '?'
         database_url = f"{database_url}{separator}sslmode=require"
 
